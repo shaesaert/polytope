@@ -43,3 +43,5 @@ from .polytope import (
 # from .plot import plot_partition, plot_transition_arrow
 from .prop2partition import (
     Partition, MetricPartition, find_adjacent_regions)
+
+from .manipulations import (dilate, erode)

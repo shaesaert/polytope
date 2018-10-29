@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Tests for the polytope subpackage."""
 import logging
-
+import math
 from nose import tools as nt
 import numpy as np
 from numpy.testing import assert_allclose
@@ -11,6 +11,7 @@ import scipy.optimize
 import polytope as pc
 from polytope.polytope import solve_rotation_ap, givens_rotation_matrix
 from polytope import solvers
+from polytope.manipulations import dilate
 
 log = logging.getLogger('polytope.polytope')
 log.setLevel(logging.INFO)
@@ -79,33 +80,31 @@ class operations_test(object):
     def tearDown(self):
         pass
 
-
     def comparison_test(self):
         p = pc.Polytope(self.A, self.b)
-        p2 = pc.Polytope(self.A, 2*self.b)
+        p2 = pc.Polytope(self.A, 2 * self.b)
 
-        assert(p <= p2)
-        assert(not p2 <= p)
-        assert(not p2 == p)
+        assert (p <= p2)
+        assert (not p2 <= p)
+        assert (not p2 == p)
 
         r = pc.Region([p])
         r2 = pc.Region([p2])
 
-        assert(r <= r2)
-        assert(not r2 <= r)
-        assert(not r2 == r)
+        assert (r <= r2)
+        assert (not r2 <= r)
+        assert (not r2 == r)
 
         # test H-rep -> V-rep -> H-rep
         v = pc.extreme(p)
         p3 = pc.qhull(v)
-        assert(p3 == p)
+        assert (p3 == p)
 
         # test V-rep -> H-rep with d+1 points
         p4 = pc.qhull(np.array([[0, 0], [1, 0], [0, 1]]))
-        assert(p4 == pc.Polytope(
+        assert (p4 == pc.Polytope(
             np.array([[1, 1], [0, -1], [0, -1]]),
             np.array([1, 0, 0])))
-
 
     def region_rotation_test(self):
         p = pc.Region([pc.Polytope(self.A, self.b)])
@@ -114,26 +113,25 @@ class operations_test(object):
         p3 = pc.Region([pc.Polytope(self.Ab3[:, 0:2], self.Ab3[:, 2])])
         p4 = pc.Region([pc.Polytope(self.Ab4[:, 0:2], self.Ab4[:, 2])])
 
-        p = p.rotation(0, 1, np.pi/2)
+        p = p.rotation(0, 1, np.pi / 2)
         print(p.bounding_box)
-        assert(p == p2)
-        assert(not p == p3)
-        assert(not p == p4)
-        assert(not p == p1)
+        assert (p == p2)
+        assert (not p == p3)
+        assert (not p == p4)
+        assert (not p == p1)
         assert_allclose(p.chebXc, [-0.5, 0.5])
 
-        p = p.rotation(0, 1, np.pi/2)
-        assert(p == p3)
+        p = p.rotation(0, 1, np.pi / 2)
+        assert (p == p3)
         assert_allclose(p.chebXc, [-0.5, -0.5])
 
-        p = p.rotation(0, 1, np.pi/2)
-        assert(p == p4)
+        p = p.rotation(0, 1, np.pi / 2)
+        assert (p == p4)
         assert_allclose(p.chebXc, [0.5, -0.5])
 
-        p = p.rotation(0, 1, np.pi/2)
-        assert(p == p1)
+        p = p.rotation(0, 1, np.pi / 2)
+        assert (p == p1)
         assert_allclose(p.chebXc, [0.5, 0.5])
-
 
     def polytope_rotation_test(self):
         p = pc.Polytope(self.A, self.b)
@@ -142,26 +140,25 @@ class operations_test(object):
         p3 = pc.Polytope(self.Ab3[:, 0:2], self.Ab3[:, 2])
         p4 = pc.Polytope(self.Ab4[:, 0:2], self.Ab4[:, 2])
 
-        p = p.rotation(0, 1, np.pi/2)
+        p = p.rotation(0, 1, np.pi / 2)
         print(p.bounding_box)
-        assert(p == p2)
-        assert(not p == p3)
-        assert(not p == p4)
-        assert(not p == p1)
+        assert (p == p2)
+        assert (not p == p3)
+        assert (not p == p4)
+        assert (not p == p1)
         assert_allclose(p.chebXc, [-0.5, 0.5])
 
-        p = p.rotation(0, 1, np.pi/2)
-        assert(p == p3)
+        p = p.rotation(0, 1, np.pi / 2)
+        assert (p == p3)
         assert_allclose(p.chebXc, [-0.5, -0.5])
 
-        p = p.rotation(0, 1, np.pi/2)
-        assert(p == p4)
+        p = p.rotation(0, 1, np.pi / 2)
+        assert (p == p4)
         assert_allclose(p.chebXc, [0.5, -0.5])
 
-        p = p.rotation(0, 1, np.pi/2)
-        assert(p == p1)
+        p = p.rotation(0, 1, np.pi / 2)
+        assert (p == p1)
         assert_allclose(p.chebXc, [0.5, 0.5])
-
 
     def region_translation_test(self):
         p = pc.Region([pc.Polytope(self.A, self.b)])
@@ -169,11 +166,10 @@ class operations_test(object):
         p2 = pc.Region([pc.Polytope(self.Ab2[:, 0:2], self.Ab2[:, 2])])
 
         p = p.translation([-1, 0])
-        assert(p == p2)
-        assert(not p == p1)
+        assert (p == p2)
+        assert (not p == p1)
         p = p.translation([1, 0])
-        assert(p == p1)
-
+        assert (p == p1)
 
     def polytope_translation_test(self):
         p = pc.Polytope(self.A, self.b)
@@ -181,10 +177,10 @@ class operations_test(object):
         p2 = pc.Polytope(self.Ab2[:, 0:2], self.Ab2[:, 2])
 
         p = p.translation([-1, 0])
-        assert(p == p2)
-        assert(not p == p1)
+        assert (p == p2)
+        assert (not p == p1)
         p = p.translation([1, 0])
-        assert(p == p1)
+        assert (p == p1)
 
     def region_empty_test(self):
         # Note that as of commit a037b555758ed9ee736fa7cb324d300b8d622fb4
@@ -225,10 +221,10 @@ class operations_test(object):
         assert not pc.is_fulldim(p3)
 
         # p4 is the unit square with center at the origin.
-        p4 = pc.Polytope(np.array([[ 1.,  0.],
-                                   [ 0.,  1.],
-                                   [-1.,  0.],
-                                   [ 0., -1.]]),
+        p4 = pc.Polytope(np.array([[1., 0.],
+                                   [0., 1.],
+                                   [-1., 0.],
+                                   [0., -1.]]),
                          np.array([0.5, 0.5, 0.5, 0.5]))
         p5 = p2.intersect(p4)
         assert pc.is_fulldim(p4)
@@ -360,7 +356,7 @@ def givens_rotation_test_180(atol=1e-15):
 def givens_rotation_test_270L(atol=1e-15):
     g1 = np.array([0, -1, 0, 0])
     g2 = np.array([0, 1, -1, 0])
-    R = givens_rotation_matrix(1, 2, 3*np.pi/2, 4)
+    R = givens_rotation_matrix(1, 2, 3 * np.pi / 2, 4)
 
     e0 = np.array([0, 1, 1, 1])
     e1 = np.array([0, 0, -1, 0])
@@ -464,6 +460,28 @@ def is_glpk_present():
         assert 'glpk' not in solvers.installed_solvers, (
             solvers.installed_solvers)
         return False
+
+
+def test_shrink():
+    from polytope import erode
+    orig_poly = pc.qhull(np.array([[0, 0], [1, 0], [1, 1]]))
+    er_poly = erode(orig_poly, 0.2)
+
+    for x in np.array([[-.01, -.01], [1.01, 0], [1.01, 1]]):
+        for theta in np.arange(-np.pi, np.pi, 0.1):
+            xt = x + np.array([0.2 * math.sin(theta), 0.2 * math.cos(theta)])
+            assert not (xt in er_poly)
+
+
+def test_expand():
+    from polytope import dilate
+    orig_poly = pc.qhull(np.array([[0, 0], [1, 0], [1, 1]]))
+    dil_poly = dilate(orig_poly, 0.2)
+
+    for x in np.array([[0, 0], [1, 0], [1, 1]]):
+        for theta in np.arange(-np.pi, np.pi, 0.1):
+            xt = x + np.array([0.2 * math.sin(theta), 0.2 * math.cos(theta)])
+            assert xt in dil_poly
 
 
 if __name__ == '__main__':
