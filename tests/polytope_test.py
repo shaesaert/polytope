@@ -465,12 +465,29 @@ def is_glpk_present():
 def test_shrink():
     from polytope import erode
     orig_poly = pc.qhull(np.array([[0, 0], [1, 0], [1, 1]]))
+    print(orig_poly)
+
     er_poly = erode(orig_poly, 0.2)
+    print(er_poly)
 
     for x in np.array([[-.01, -.01], [1.01, 0], [1.01, 1]]):
         for theta in np.arange(-np.pi, np.pi, 0.1):
             xt = x + np.array([0.2 * math.sin(theta), 0.2 * math.cos(theta)])
             assert not (xt in er_poly)
+
+
+def test_shrink_too_much():
+    from polytope import erode
+    orig_poly = pc.qhull(np.array([[0, 0], [1, 0], [1, 1]]))
+    print(orig_poly)
+
+    er_poly = erode(orig_poly, 2)
+    print(er_poly)
+    for x in np.array([[-.01, -.01], [1.01, 0], [1.01, 1]]):
+        for theta in np.arange(-np.pi, np.pi, 0.1):
+            xt = x + np.array([2 * math.sin(theta), 2 * math.cos(theta)])
+            assert not (xt in er_poly)
+
 
 
 def test_expand():
@@ -482,6 +499,7 @@ def test_expand():
         for theta in np.arange(-np.pi, np.pi, 0.1):
             xt = x + np.array([0.2 * math.sin(theta), 0.2 * math.cos(theta)])
             assert xt in dil_poly
+
 
 
 if __name__ == '__main__':

@@ -56,16 +56,28 @@ def dilate(poly,eps):
     :param eps: positive scalar value with which the polytope is dilated
     :return: polytope
     """
+    if isinstance(poly,polytope.Region):
+        dil_reg = []
+        for pol in poly.list_poly:
+            assert isinstance(pol,polytope.Polytope)
+            dil_reg += [dilate(pol, eps)]
+        return polytope.Region(dil_reg)
 
     vertices = extreme(poly)
     dim = len(vertices[0])  # this is the dimensionality of the space
     dil_eps = dim * [[-eps,eps]]
     dil_eps_v = [np.array(n) for n in itertools.product(*dil_eps)]  # vectors with (+- eps,+- eps, +- eps,...)
+
     new_vertices = []
     for v,d in itertools.product(vertices,dil_eps_v):
-        new_vertices += [[v + d]]
+
+        new_vertices += [[np.array(v).flatten() +  np.array(d).flatten()]]
+
         # make box
-    return qhull(np.concatenate(new_vertices))
+        # print("add vertices part:", np.array(v).flatten() +  np.array(d).flatten())
+    VV = np.concatenate(new_vertices)
+    # print("V", VV)
+    return qhull(VV)
 
 
 def erode(poly,eps):
@@ -88,6 +100,12 @@ def erode(poly,eps):
     :param eps: positive scalar value with which the polytope is eroded
     :return: polytope
     """
+    if isinstance(poly,polytope.Region):
+        er_reg = []
+        for pol in poly.list_poly:
+            assert isinstance(pol,polytope.Polytope)
+            er_reg += [erode(pol, eps)]
+        return polytope.Region(er_reg)
 
     A = poly.A
     b = poly.b
